@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- <PatternLayout pattern="%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/> -->
+            <PatternLayout pattern="[%d{HH:mm:ss}] %msg%n"/>
+        </Console>
+
+        <RollingFile name="status" append="true" fileName="logs/status.log" filePattern="logs/status.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="annots_inserted" append="true" fileName="logs/annots_inserted.log" filePattern="logs/annots_inserted.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="annots_deleted" append="true" fileName="logs/annots_deleted.log" filePattern="logs/annots_deleted.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="annots_same_as_omim" append="true" fileName="logs/annots_same_as_omim.log" filePattern="logs/annots_same_as_omim.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="genes_unmatched" append="true" fileName="logs/genes_unmatched.log" filePattern="logs/genes_unmatched.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+
+        <RollingFile name="spring" append="true" fileName="logs/spring.log" filePattern="logs/spring.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+        <!-- daily -->
+        <Logger name="status" level="info" additivity="false">
+            <AppenderRef ref="status"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+
+        <!-- monthly -->
+        <Logger name="annots_inserted" level="debug" additivity="false">
+            <AppenderRef ref="annots_inserted"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="annots_deleted" level="debug" additivity="false">
+            <AppenderRef ref="annots_deleted"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="annots_same_as_omim" level="debug" additivity="false">
+            <AppenderRef ref="annots_same_as_omim"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="genes_unmatched" level="debug" additivity="false">
+            <AppenderRef ref="genes_unmatched"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+
+        <Logger name="org.springframework" level="info" additivity="false">
+            <AppenderRef ref="spring"/>
+            <AppenderRef ref="Console" level="warn"/>
+        </Logger>
+    </Loggers>
+</Configuration>

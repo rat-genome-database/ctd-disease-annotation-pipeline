@@ -1,0 +1,27 @@
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<bean id="main" class="edu.mcw.rgd.CTDDisease.Main">
+        <property name="version" value="CTDDisease Annotation pipeline v 1.1.7 as of Sep 21, 2018" />
+		<property name="dao" ref="dao" />
+		<property name="qcThreadCount" value="8" />
+		<property name="staleAnnotDeleteThreshold" value="5%" />
+	</bean>
+
+	<bean id="fileParser" class="edu.mcw.rgd.CTDDisease.FileParser">
+		<property name="ctdDiseaseFile" value="http://ctdbase.org/reports/CTD_genes_diseases.tsv.gz" />
+	</bean>
+
+	<bean id="qc" class="edu.mcw.rgd.CTDDisease.QC">
+		<property name="srcPipeline" value="CTD" />
+		<property name="refRgdId" value="11554173" />
+		<property name="OmimSrcPipeline" value="OMIM" />
+		<property name="OmimRefRgdId" value="7240710" />
+	</bean>
+
+	<bean id="loader" class="edu.mcw.rgd.CTDDisease.Loader">
+	</bean>
+
+	<bean id="dao" class="edu.mcw.rgd.CTDDisease.Dao">
+		<property name="createdBy" value="64" />
+	</bean>
+</beans>
