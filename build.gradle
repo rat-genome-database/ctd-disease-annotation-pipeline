@@ -23,7 +23,7 @@ dependencies {
     compile 'org.apache.logging.log4j:log4j-core:2.9.1'
     compile 'org.springframework:spring-beans:5.0.9.RELEASE'
     compile 'org.springframework:spring-jdbc:5.0.9.RELEASE'
-    compile 'com.oracle:ojdbc6:11.2.0.4.0-atlassian-hosted''
+    compile 'com.oracle:ojdbc6:11.2.0.4.0-atlassian-hosted'
 
     compile fileTree(dir: 'lib', include: '*.jar')
 }
