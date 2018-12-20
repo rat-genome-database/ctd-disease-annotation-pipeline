@@ -1,3 +1,6 @@
+ver 1.1.8 -- Dec 20, 2018
+  updated dependencies & build.gradle
+
 ver 1.1.7 -- Sep 21, 2018
   moved from subversion to github
 

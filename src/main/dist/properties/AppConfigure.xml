@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 	<bean id="main" class="edu.mcw.rgd.CTDDisease.Main">
-        <property name="version" value="CTDDisease Annotation pipeline v 1.1.7 as of Sep 21, 2018" />
+        <property name="version" value="CTDDisease Annotation pipeline v 1.1.8 as of Dec 20, 2018" />
 		<property name="dao" ref="dao" />
 		<property name="qcThreadCount" value="8" />
 		<property name="staleAnnotDeleteThreshold" value="5%" />
