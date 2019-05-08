@@ -8,6 +8,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -79,7 +80,10 @@ public class Main {
         long time1 = System.currentTimeMillis();
 
         // display connection info
-        log.info(dao.getConnectionInfo());
+        log.info("   "+dao.getConnectionInfo());
+
+        SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.info("   started at "+sdt.format(new Date(time1)));
 
         PipelineManager manager = new PipelineManager();
 
