@@ -1,34 +1,34 @@
 package edu.mcw.rgd.CTDDisease;
 
-import edu.mcw.rgd.pipelines.PipelineRecord;
-import edu.mcw.rgd.pipelines.RecordPreprocessor;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.zip.GZIPInputStream;
+import java.util.List;
 
 /**
- * Created by mtutaj on 10/17/2016.
+ * @author mtutaj
+ * @since 10/17/2016
  */
-public class FileParser extends RecordPreprocessor {
+public class FileParser {
     private String ctdDiseaseFile;
     Logger log = LogManager.getLogger("status");
 
-    @Override
-    public void process() throws Exception {
+    public List<Record> process(CounterPool counters) throws Exception {
+
+        List<Record> incomingRecords = new ArrayList<>();
 
         // download disease file from CTD
         String localFile = downloadDiseaseFile();
 
         // break file into lines
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(localFile))));
+        BufferedReader reader = Utils.openReader(localFile);
         String line;
         while( (line=reader.readLine())!=null ) {
             // skip comments
@@ -36,13 +36,14 @@ public class FileParser extends RecordPreprocessor {
                 continue;
             }
 
-            getSession().incrementCounter("DATA LINES  READ", 1);
-            Record rec = process(line);
+            Record rec = process(line, counters);
             if( rec!=null ) {
-                getSession().putRecordToFirstQueue(rec);
+                incomingRecords.add(rec);
             }
         }
         reader.close();
+
+        return incomingRecords;
     }
 
     public String downloadDiseaseFile() throws Exception {
@@ -55,19 +56,19 @@ public class FileParser extends RecordPreprocessor {
         return localFile;
     }
 
-    Record process(String line) throws Exception {
+    Record process(String line, CounterPool counters) throws Exception {
 
         // parse file
         // fields:
         // GeneSymbol	GeneID	DiseaseName	DiseaseID	DirectEvidence	InferenceChemicalName	InferenceScore	OmimIDs	PubMedIDs
-        getSession().incrementCounter("DATA LINES  PROCESSED", 1);
+        counters.increment("DATA LINES  PROCESSED");
         String[] cols = line.split("[\\t]", -1);
         String directEvidence = cols[4];
         if( Utils.isStringEmpty(directEvidence) ) {
-            getSession().incrementCounter("DATA LINES INFERRED (SKIPPED)", 1);
+            counters.increment("DATA LINES INFERRED (SKIPPED)");
             return null;
         }
-        getSession().incrementCounter("DATA LINES WITH DIRECT EVIDENCE", 1);
+        counters.increment("DATA LINES WITH DIRECT EVIDENCE");
 
         Record rec = new Record();
         rec.geneSymbol = cols[0];

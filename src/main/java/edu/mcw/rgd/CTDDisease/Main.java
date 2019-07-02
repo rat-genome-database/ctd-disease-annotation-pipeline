@@ -1,6 +1,6 @@
 package edu.mcw.rgd.CTDDisease;
 
-import edu.mcw.rgd.pipelines.PipelineManager;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -9,7 +9,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author mtutaj
@@ -23,14 +25,11 @@ import java.util.Date;
 public class Main {
 
     private String version;
-    private int qcThreadCount;
     private String staleAnnotDeleteThreshold;
 
     Dao dao;
     FileParser fileParser;
     QC qc;
-    QCAnnot qcAnnot;
-    Loader loader;
 
     Logger log = LogManager.getLogger("status");
 
@@ -59,16 +58,10 @@ public class Main {
     void init(DefaultListableBeanFactory bf) {
 
         log.info(getVersion());
-        fileParser = (FileParser) bf.getBean("fileParser");
 
+        fileParser = (FileParser) bf.getBean("fileParser");
         qc = (QC) bf.getBean("qc");
         qc.setDao(dao);
-
-        qcAnnot = new QCAnnot();
-        qcAnnot.setDao(dao);
-
-        loader = (Loader) bf.getBean("loader");
-        loader.setDao(dao);
     }
 
     /**
@@ -85,33 +78,33 @@ public class Main {
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         log.info("   started at "+sdt.format(new Date(time1)));
 
-        PipelineManager manager = new PipelineManager();
-
+        CounterPool counters = new CounterPool();
         Date time0 = new Date();
         int originalAnnotCount = dao.getAnnotationsModifiedBeforeTimestamp(time0).size();
-        manager.getSession().incrementCounter("ANNOT COUNT ORIGINAL", originalAnnotCount);
+        counters.add("ANNOT COUNT ORIGINAL", originalAnnotCount);
 
-        manager.addPipelineWorkgroup(fileParser, "FP", 1, 0);
-        manager.addPipelineWorkgroup(qc, "QC", getQcThreadCount(), 0);
-        manager.addPipelineWorkgroup(qcAnnot, "QA", 1, 0);
-        manager.addPipelineWorkgroup(loader, "LD", 1, 0);
 
-        // because we are doing annotation QC and loading in parallel thread, conflicts could happen
-        // resulting in an attempt to insert duplicate annotations;
-        // we do allow for up-to 100 duplicate annotations to be resolved later
-        manager.getSession().setAllowedExceptions(100);
+        qc.setCounters(counters);
 
-        // violations of unique key during inserts of annotations will be handled silently,
-        // without writing anything to the logs
-        manager.getSession().registerUserException(new String[]{
-                "FULL_ANNOT_MULT_UC", "DataIntegrityViolationException", "SQLIntegrityConstraintViolationException"});
+        List<Record> incomingRecords = fileParser.process(counters);
 
-        manager.run();
+        log.info("INCOMING RECORDS: "+incomingRecords.size());
 
-        dao.deleteObsoleteAnnotations(manager.getSession(), time0, originalAnnotCount, getStaleAnnotDeleteThreshold());
+        // randomize incoming records to limit the chance of conflicts when processing in highly parallel environment
+        Collections.shuffle(incomingRecords);
+
+        incomingRecords.parallelStream().forEach( rec-> {
+            try {
+                qc.process(rec);
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        dao.deleteObsoleteAnnotations(counters, time0, originalAnnotCount, getStaleAnnotDeleteThreshold());
 
         // dump counter statistics
-        manager.getSession().dumpCounters(log);
+        log.info(counters.dumpAlphabetically());
 
         log.info("=== OK === elapsed time "+Utils.formatElapsedTime(time1, System.currentTimeMillis()));
     }
@@ -130,14 +123,6 @@ public class Main {
 
     public void setDao(Dao dao) {
         this.dao = dao;
-    }
-
-    public void setQcThreadCount(int qcThreadCount) {
-        this.qcThreadCount = qcThreadCount;
-    }
-
-    public int getQcThreadCount() {
-        return qcThreadCount;
     }
 
     public void setStaleAnnotDeleteThreshold(String staleAnnotDeleteThreshold) {

@@ -8,7 +8,7 @@ import edu.mcw.rgd.datamodel.Gene;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
-import edu.mcw.rgd.pipelines.PipelineSession;
+import edu.mcw.rgd.process.CounterPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,14 +19,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by mtutaj on 10/13/2016.
- * <p>
+ * @author mtutaj
+ * @since 10/13/2016
  * wrapper for all calls to database
  */
 public class Dao {
 
     Logger logAnnotsInserted = LogManager.getLogger("annots_inserted");
     Logger logAnnotsDeleted = LogManager.getLogger("annots_deleted");
+    Logger logAnnotsQueried = LogManager.getLogger("annots_queried");
     Logger logStatus = LogManager.getLogger("status");
 
     private AnnotationDAO annotationDAO = new AnnotationDAO();
@@ -116,11 +117,17 @@ public class Dao {
      * @throws Exception on spring framework dao failure
      */
     public int getAnnotationKey(Annotation annot) throws Exception {
-        logAnnotsInserted.debug("KEY "+annot.dump("|"));
+        logAnnotsQueried.debug(annot.dump("|"));
         return annotationDAO.getAnnotationKey(annot);
     }
 
     public int insertAnnotation(Annotation annot) throws Exception{
+        if( annot.getDataSrc().equals("OMIM") ) {
+            throw new Exception("WHAT? inserting an OMIM annotation?");
+        }
+        if( annot.getRefRgdId()==7240710 ) {
+            throw new Exception("WHAT? OMIM REF RGD ID?");
+        }
         logAnnotsInserted.debug("INSERT "+annot.dump("|"));
         return annotationDAO.insertAnnotation(annot);
     }
@@ -145,28 +152,28 @@ public class Dao {
         return annotationDAO.getAnnotationsModifiedBeforeTimestamp(createdBy, dt, "D");
     }
 
-    public void deleteObsoleteAnnotations(PipelineSession session, Date time0, int originalAnnotCount,
-        String staleAnnotDeleteThresholdStr) throws Exception {
+    public void deleteObsoleteAnnotations(CounterPool counters, Date time0, int originalAnnotCount,
+                                          String staleAnnotDeleteThresholdStr) throws Exception {
 
         int staleAnnotDeleteThresholdPerc = Integer.parseInt(staleAnnotDeleteThresholdStr.substring(0, staleAnnotDeleteThresholdStr.length()-1));
         int staleAnnotDeleteThresholdCount = (staleAnnotDeleteThresholdPerc*originalAnnotCount) / 100;
-        session.incrementCounter("OBSOLETE ANNOTATION "+staleAnnotDeleteThresholdStr+" DELETE THRESHOLD", staleAnnotDeleteThresholdCount);
+        counters.add("OBSOLETE ANNOTATION "+staleAnnotDeleteThresholdStr+" DELETE THRESHOLD", staleAnnotDeleteThresholdCount);
 
         List<Annotation> obsoleteAnnotations = getAnnotationsModifiedBeforeTimestamp(time0);
-        session.incrementCounter("OBSOLETE ANNOTATION COUNT", obsoleteAnnotations.size());
+        counters.add("OBSOLETE ANNOTATION COUNT", obsoleteAnnotations.size());
 
         if( obsoleteAnnotations.size() > staleAnnotDeleteThresholdCount ) {
             String msg = "WARN: OBSOLETE ANNOTATIONS NOT DELETED: "+staleAnnotDeleteThresholdStr+" THRESHOLD VIOLATED!";
             logStatus.info(msg);
             if( originalAnnotCount!=0 ) {
-                session.incrementCounter(msg, staleAnnotDeleteThresholdCount);
+                counters.add(msg, staleAnnotDeleteThresholdCount);
             }
             return;
         }
 
         for( Annotation obsoleteAnnot: obsoleteAnnotations ) {
             logAnnotsDeleted.debug("DELETE " + obsoleteAnnot.dump("|"));
-            session.incrementCounter("ANNOTS "+obsoleteAnnot.getEvidence() + " DELETED", 1);
+            counters.add("ANNOTS "+obsoleteAnnot.getEvidence() + " DELETED", 1);
         }
 
         annotationDAO.deleteAnnotations(getCreatedBy(), time0);

@@ -1,9 +1,8 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 	<bean id="main" class="edu.mcw.rgd.CTDDisease.Main">
-        <property name="version" value="CTDDisease Annotation pipeline v 1.1.9 as of May 7, 2019" />
+        <property name="version" value="CTDDisease Annotation pipeline  build 2019-07-02" />
 		<property name="dao" ref="dao" />
-		<property name="qcThreadCount" value="8" />
 		<property name="staleAnnotDeleteThreshold" value="5%" />
 	</bean>
 
@@ -16,9 +15,6 @@
 		<property name="refRgdId" value="11554173" />
 		<property name="OmimSrcPipeline" value="OMIM" />
 		<property name="OmimRefRgdId" value="7240710" />
-	</bean>
-
-	<bean id="loader" class="edu.mcw.rgd.CTDDisease.Loader">
 	</bean>
 
 	<bean id="dao" class="edu.mcw.rgd.CTDDisease.Dao">

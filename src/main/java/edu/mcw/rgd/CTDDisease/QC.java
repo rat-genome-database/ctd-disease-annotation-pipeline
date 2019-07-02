@@ -6,11 +6,12 @@ import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
-import edu.mcw.rgd.pipelines.PipelineRecord;
-import edu.mcw.rgd.pipelines.RecordProcessor;
+import edu.mcw.rgd.process.CounterPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -18,10 +19,11 @@ import java.util.List;
 /**
  * Created by mtutaj on 10/13/2016.
  */
-public class QC extends RecordProcessor {
+public class QC {
 
     Logger logGenesUnmatched = LogManager.getLogger("genes_unmatched");
     Logger logAnnotsSameAsOmim = LogManager.getLogger("annots_same_as_omim");
+    Logger logExceptions = LogManager.getLogger("exceptions");
 
     private String srcPipeline;
     private int refRgdId;
@@ -29,38 +31,57 @@ public class QC extends RecordProcessor {
     private int omimRefRgdId;
 
     private Dao dao;
+    private CounterPool counters;
 
     public void setDao(Dao dao) {
         this.dao = dao;
     }
 
-    @Override
-    public void process(PipelineRecord pipelineRecord) throws Exception {
-        Record rec = (Record) pipelineRecord;
+    public void process(Record rec) throws Exception {
 
-        if( rec.geneID!=null ) {
-            qcGenes(rec);
-            qcTerms(rec);
-            qcAnnots(rec);
+        if( rec.geneID==null ) {
+            return;
         }
+
+        final int MAX_RETRY_COUNT = 3;
+        for( int attemptNr=0; attemptNr<MAX_RETRY_COUNT; attemptNr++ ) {
+
+            // sometimes duplicate keys when inserting new annots cause a problem
+            try {
+                qcGenes(rec);
+                qcTerms(rec);
+                qcAnnots(rec);
+                loadData(rec);
+
+                return;
+            } catch(Exception e) {
+                ByteArrayOutputStream bs = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(bs));
+                logExceptions.debug(bs.toString());
+
+                counters.increment("RETRIED_AFTER_EXCEPTION");
+            }
+        }
+
+        throw new Exception("ERROR: reached MAX_RETRY_COUNT="+MAX_RETRY_COUNT);
     }
 
     public void qcGenes(Record rec) throws Exception {
         // match incoming data with a gene in RGD
         List<Gene> genes = dao.getGenesByXdbId(XdbId.XDB_KEY_NCBI_GENE, rec.geneID);
         if( genes.isEmpty() ) {
-            getSession().incrementCounter("MATCH GENE NONE", 1);
+            counters.increment("MATCH GENE NONE");
             logGenesUnmatched.debug("GeneID:"+rec.geneID+" "+rec.geneSymbol);
             rec.incomingGene = null;
         } else {
             if (genes.size() == 1) {
-                getSession().incrementCounter("MATCH GENE SINGLE", 1);
+                counters.increment("MATCH GENE SINGLE");
             } else {
-                getSession().incrementCounter("MATCH GENE MULTIPLE", 1);
+                counters.increment("MATCH GENE MULTIPLE");
             }
             rec.incomingGene = genes.get(0);
 
-            getSession().incrementCounter("MATCH GENE SPECIES "+ SpeciesType.getCommonName(rec.incomingGene.getSpeciesTypeKey()), 1);
+            counters.increment("MATCH GENE SPECIES "+ SpeciesType.getCommonName(rec.incomingGene.getSpeciesTypeKey()));
         }
     }
 
@@ -68,13 +89,13 @@ public class QC extends RecordProcessor {
         // match incoming data with a term in RGD
         List<Term> diseaseTerms = dao.getDiseaseTermsByMeshID(rec.diseaseID);
         if( diseaseTerms.isEmpty() ) {
-            getSession().incrementCounter("MATCH TERM NONE", 1);
+            counters.increment("MATCH TERM NONE");
             rec.incomingTerm = null;
         } else {
             if (diseaseTerms.size() == 1) {
-                getSession().incrementCounter("MATCH TERM SINGLE", 1);
+                counters.increment("MATCH TERM SINGLE");
             } else {
-                getSession().incrementCounter("MATCH TERM MULTIPLE", 1);
+                counters.increment("MATCH TERM MULTIPLE");
             }
             rec.incomingTerm = diseaseTerms.get(0);
         }
@@ -99,6 +120,15 @@ public class QC extends RecordProcessor {
                 createAnnotation(rec, gene, "ISO", xrefSource);
             }
         }
+
+
+        rec.inRgdAnnots.clear();
+
+        if( rec.incomingAnnots!=null ) {
+            for (Annotation annot : rec.incomingAnnots) {
+                rec.inRgdAnnots.add(dao.getAnnotationKey(annot));
+            }
+        }
     }
 
     /**
@@ -115,7 +145,7 @@ public class QC extends RecordProcessor {
             pubMedIds = pubMedIds.substring(barPos+1);
         }
         if( !chunks.isEmpty() ) {
-            getSession().incrementCounter("LINES WITH ANNOT SPLITS", 1);
+            counters.increment("LINES WITH ANNOT SPLITS");
         }
 
         // add the last chunk
@@ -156,14 +186,14 @@ public class QC extends RecordProcessor {
         int omimAnnotKey = dao.getAnnotationKey(annot);
         if( omimAnnotKey!=0 ) {
             logAnnotsSameAsOmim.debug(annot.dump("|"));
-            getSession().incrementCounter("ANNOTS SAME AS PRIMARY OMIM SKIPPED", 1);
+            counters.increment("ANNOTS SAME AS PRIMARY OMIM SKIPPED");
             return false;
         }
         annot.setEvidence("ISO"); // secondary evidence for OMIM annot
         omimAnnotKey = dao.getAnnotationKey(annot);
         if( omimAnnotKey!=0 ) {
             logAnnotsSameAsOmim.debug(annot.dump("|"));
-            getSession().incrementCounter("ANNOTS SAME AS SECONDARY OMIM SKIPPED", 1);
+            counters.increment("ANNOTS SAME AS SECONDARY OMIM SKIPPED");
             return false;
         }
 
@@ -177,8 +207,23 @@ public class QC extends RecordProcessor {
 
         // add this annotation to incoming annotations
         rec.incomingAnnots.add(annot);
-        getSession().incrementCounter("ANNOT "+evidence+" COUNT", 1);
+        counters.increment("ANNOT   "+evidence+" COUNT");
         return true;
+    }
+
+    void loadData(Record rec) throws Exception {
+        if( rec.incomingAnnots!=null ) {
+            for (int i = 0; i < rec.incomingAnnots.size(); i++) {
+                int annotKeyInRgd = rec.inRgdAnnots.get(i);
+                if (annotKeyInRgd != 0) {
+                    dao.updateLastModifiedDateForAnnot(annotKeyInRgd);
+                    counters.increment("ANNOTS UP-TO-DATE");
+                } else {
+                    dao.insertAnnotation(rec.incomingAnnots.get(i));
+                    counters.increment("ANNOTS INSERTED");
+                }
+            }
+        }
     }
 
     public void setSrcPipeline(String srcPipeline) {
@@ -211,5 +256,13 @@ public class QC extends RecordProcessor {
 
     public int getOmimRefRgdId() {
         return omimRefRgdId;
+    }
+
+    public CounterPool getCounters() {
+        return counters;
+    }
+
+    public void setCounters(CounterPool counters) {
+        this.counters = counters;
     }
 }
