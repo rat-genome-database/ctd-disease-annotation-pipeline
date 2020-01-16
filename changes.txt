@@ -1,3 +1,6 @@
+Jan 16, 2020
+  improved matching by terms (no longer matches obsolete terms) -- by updating rgdcore.jar
+
 Jul 2, 2019
   refactored to use java parallel streaming; improved logging
 

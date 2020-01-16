@@ -7,6 +7,7 @@ import edu.mcw.rgd.datamodel.XdbId;
 import edu.mcw.rgd.datamodel.ontology.Annotation;
 import edu.mcw.rgd.datamodel.ontologyx.Term;
 import edu.mcw.rgd.process.CounterPool;
+import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -96,6 +97,7 @@ public class QC {
                 counters.increment("MATCH TERM SINGLE");
             } else {
                 counters.increment("MATCH TERM MULTIPLE");
+                System.out.println("MULTI TERMS: "+rec.diseaseID+" "+ Utils.concatenate("|", diseaseTerms, "getAccId"));
             }
             rec.incomingTerm = diseaseTerms.get(0);
         }
@@ -186,14 +188,14 @@ public class QC {
         int omimAnnotKey = dao.getAnnotationKey(annot);
         if( omimAnnotKey!=0 ) {
             logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("ANNOTS SAME AS PRIMARY OMIM SKIPPED");
+            counters.increment("OMIM ANNOTS SAME AS PRIMARY OMIM SKIPPED");
             return false;
         }
         annot.setEvidence("ISO"); // secondary evidence for OMIM annot
         omimAnnotKey = dao.getAnnotationKey(annot);
         if( omimAnnotKey!=0 ) {
             logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("ANNOTS SAME AS SECONDARY OMIM SKIPPED");
+            counters.increment("OMIM ANNOTS SAME AS SECONDARY OMIM SKIPPED");
             return false;
         }
 
@@ -207,7 +209,7 @@ public class QC {
 
         // add this annotation to incoming annotations
         rec.incomingAnnots.add(annot);
-        counters.increment("ANNOT   "+evidence+" COUNT");
+        counters.increment("OMIM ANNOT   "+evidence+" COUNT");
         return true;
     }
 
@@ -217,10 +219,10 @@ public class QC {
                 int annotKeyInRgd = rec.inRgdAnnots.get(i);
                 if (annotKeyInRgd != 0) {
                     dao.updateLastModifiedDateForAnnot(annotKeyInRgd);
-                    counters.increment("ANNOTS UP-TO-DATE");
+                    counters.increment("OMIM ANNOTS UP-TO-DATE");
                 } else {
                     dao.insertAnnotation(rec.incomingAnnots.get(i));
-                    counters.increment("ANNOTS INSERTED");
+                    counters.increment("OMIM ANNOTS INSERTED");
                 }
             }
         }
