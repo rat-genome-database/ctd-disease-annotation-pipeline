@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 	<bean id="main" class="edu.mcw.rgd.CTDDisease.Main">
-        <property name="version" value="CTDDisease Annotation pipeline  -- build 2020-01-16" />
+        <property name="version" value="CTDDisease Annotation pipeline  -- build 2020-04-14" />
 		<property name="dao" ref="dao" />
 		<property name="staleAnnotDeleteThreshold" value="5%" />
 	</bean>

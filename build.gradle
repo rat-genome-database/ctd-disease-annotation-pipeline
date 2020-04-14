@@ -17,21 +17,17 @@ String myAppName = 'CTDDisease'
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://packages.atlassian.com/maven-3rdparty'
-    }
 }
 
 dependencies {
     compile 'commons-dbcp:commons-dbcp:1.4'
     compile 'commons-net:commons-net:3.6'
-    compile 'org.apache.httpcomponents:httpclient:4.5.9'
+    compile 'org.apache.httpcomponents:httpclient:4.5.10'
     compile 'org.apache.logging.log4j:log4j-1.2-api:2.11.2' // log4j --> log4j2 bridge for FileDownloader in rgdcore
     compile 'org.apache.logging.log4j:log4j-api:2.11.2'
     compile 'org.apache.logging.log4j:log4j-core:2.11.2'
-    compile 'org.springframework:spring-beans:5.1.7.RELEASE'
-    compile 'org.springframework:spring-jdbc:5.1.7.RELEASE'
-    compile 'com.oracle:ojdbc6:11.2.0.4.0-atlassian-hosted'
+    compile 'org.springframework:spring-beans:5.1.8.RELEASE'
+    compile 'org.springframework:spring-jdbc:5.1.8.RELEASE'
 
     compile fileTree(dir: 'lib', include: '*.jar')
 }

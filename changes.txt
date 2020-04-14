@@ -1,3 +1,6 @@
+Apr 14, 2020
+  updated jar dependencies
+
 Jan 16, 2020
   improved matching by terms (no longer matches obsolete terms) -- by updating rgdcore.jar
 

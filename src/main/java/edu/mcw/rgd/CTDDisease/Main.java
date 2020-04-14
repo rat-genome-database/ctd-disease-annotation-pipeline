@@ -8,6 +8,8 @@ import org.springframework.core.io.FileSystemResource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -50,7 +52,10 @@ public class Main {
         try {
             manager.run();
         } catch(Exception e) {
-            e.printStackTrace();
+            // print stack trace to error stream
+            ByteArrayOutputStream bs = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(bs));
+            manager.log.error(bs.toString());
             throw e;
         }
     }
