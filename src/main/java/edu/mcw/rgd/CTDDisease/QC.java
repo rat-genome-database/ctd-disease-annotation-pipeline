@@ -188,14 +188,14 @@ public class QC {
         int omimAnnotKey = dao.getAnnotationKey(annot);
         if( omimAnnotKey!=0 ) {
             logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("OMIM ANNOTS SAME AS PRIMARY OMIM SKIPPED");
+            counters.increment("CTD ANNOTS SAME AS PRIMARY OMIM SKIPPED");
             return false;
         }
         annot.setEvidence("ISO"); // secondary evidence for OMIM annot
         omimAnnotKey = dao.getAnnotationKey(annot);
         if( omimAnnotKey!=0 ) {
             logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("OMIM ANNOTS SAME AS SECONDARY OMIM SKIPPED");
+            counters.increment("CTD ANNOTS SAME AS SECONDARY OMIM SKIPPED");
             return false;
         }
 
@@ -209,7 +209,7 @@ public class QC {
 
         // add this annotation to incoming annotations
         rec.incomingAnnots.add(annot);
-        counters.increment("OMIM ANNOT   "+evidence+" COUNT");
+        counters.increment("CTD ANNOT   "+evidence+" COUNT");
         return true;
     }
 
@@ -219,10 +219,10 @@ public class QC {
                 int annotKeyInRgd = rec.inRgdAnnots.get(i);
                 if (annotKeyInRgd != 0) {
                     dao.updateLastModifiedDateForAnnot(annotKeyInRgd);
-                    counters.increment("OMIM ANNOTS UP-TO-DATE");
+                    counters.increment("CTD ANNOTS UP-TO-DATE");
                 } else {
                     dao.insertAnnotation(rec.incomingAnnots.get(i));
-                    counters.increment("OMIM ANNOTS INSERTED");
+                    counters.increment("CTD ANNOTS INSERTED");
                 }
             }
         }
