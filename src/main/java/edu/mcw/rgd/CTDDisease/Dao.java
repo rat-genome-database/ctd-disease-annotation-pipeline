@@ -173,7 +173,7 @@ public class Dao {
 
         for( Annotation obsoleteAnnot: obsoleteAnnotations ) {
             logAnnotsDeleted.debug("DELETE " + obsoleteAnnot.dump("|"));
-            counters.add("ANNOTS "+obsoleteAnnot.getEvidence() + " DELETED", 1);
+            counters.increment("OBSOLETE ANNOTS "+obsoleteAnnot.getEvidence() + " DELETED");
         }
 
         annotationDAO.deleteAnnotations(getCreatedBy(), time0);
