@@ -15,6 +15,8 @@ targetCompatibility = 1.8
 mainClassName = 'edu.mcw.rgd.CTDDisease.Main'
 String myAppName = 'CTDDisease'
 
+project.archivesBaseName = myAppName
+
 repositories {
     mavenCentral()
 }
@@ -23,18 +25,16 @@ dependencies {
     compile 'commons-dbcp:commons-dbcp:1.4'
     compile 'commons-net:commons-net:3.6'
     compile 'org.apache.httpcomponents:httpclient:4.5.11'
-    compile 'org.apache.logging.log4j:log4j-1.2-api:2.16.0' // log4j --> log4j2 bridge for FileDownloader in rgdcore
     compile 'org.apache.logging.log4j:log4j-api:2.16.0'
     compile 'org.apache.logging.log4j:log4j-core:2.16.0'
     compile 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    compile 'org.springframework:spring-beans:5.2.1.RELEASE'
-    compile 'org.springframework:spring-jdbc:5.2.1.RELEASE'
+    compile 'org.springframework:spring-beans:5.2.2.RELEASE'
+    compile 'org.springframework:spring-jdbc:5.2.2.RELEASE'
 
     compile fileTree(dir: 'lib', include: '*.jar')
 }
 
 jar {
-    baseName = myAppName
     manifest {
         attributes(
             'Built-By': System.getProperty('user.name'),

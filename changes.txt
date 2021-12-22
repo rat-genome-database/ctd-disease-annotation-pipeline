@@ -1,3 +1,6 @@
+Dec 22, 2021
+  removed unused dependency
+
 Dec 14, 2021
   updated log4j to avoid zero-day vulnerability
 
