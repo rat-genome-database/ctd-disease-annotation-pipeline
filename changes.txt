@@ -1,3 +1,6 @@
+Jan 06, 2022
+  updated log4j to avoid known exploits
+
 Dec 22, 2021
   removed unused dependency
 
