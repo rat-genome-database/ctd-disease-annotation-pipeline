@@ -1,3 +1,6 @@
+Apr 21, 2022
+  fixed logging of dates
+
 Jan 06, 2022
   updated log4j to avoid known exploits
 
