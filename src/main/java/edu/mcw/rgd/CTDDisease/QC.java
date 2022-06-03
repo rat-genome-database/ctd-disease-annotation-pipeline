@@ -11,8 +11,6 @@ import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -56,9 +54,7 @@ public class QC {
 
                 return;
             } catch(Exception e) {
-                ByteArrayOutputStream bs = new ByteArrayOutputStream();
-                e.printStackTrace(new PrintStream(bs));
-                logExceptions.debug(bs.toString());
+                Utils.printStackTrace(e, logExceptions);
 
                 counters.increment("RETRIED_AFTER_EXCEPTION");
             }
