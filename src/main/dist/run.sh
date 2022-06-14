@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 . /etc/profile
 
-APPNAME=CTDDisease
+APPNAME="ctd-disease-annotation-pipeline"
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 
