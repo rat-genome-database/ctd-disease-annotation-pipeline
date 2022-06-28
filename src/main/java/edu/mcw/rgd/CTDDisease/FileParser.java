@@ -51,6 +51,7 @@ public class FileParser {
         downloader.setExternalFile(getCtdDiseaseFile());
         downloader.setLocalFile("data/gene2disease.tsv.gz");
         downloader.setAppendDateStamp(true);
+        downloader.setSoTimeout(600000); // connection timeout set to 600s = 10min
         String localFile = downloader.downloadNew();
         log.info("Downloaded file "+localFile);
         return localFile;
