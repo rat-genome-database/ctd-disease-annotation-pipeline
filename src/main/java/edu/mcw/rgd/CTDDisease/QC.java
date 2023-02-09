@@ -11,6 +11,8 @@ import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,7 +24,7 @@ public class QC {
 
     Logger logGenesUnmatched = LogManager.getLogger("genes_unmatched");
     Logger logAnnotsSameAsOmim = LogManager.getLogger("annots_same_as_omim");
-    Logger logExceptions = LogManager.getLogger("exceptions");
+    Logger logStatus = LogManager.getLogger("status");
 
     private String srcPipeline;
     private int refRgdId;
@@ -54,7 +56,10 @@ public class QC {
 
                 return;
             } catch(Exception e) {
-                Utils.printStackTrace(e, logExceptions);
+                logStatus.debug("=== attempt "+(attemptNr+1)+" out of "+MAX_RETRY_COUNT+": record processing failed: ");
+                ByteArrayOutputStream bs = new ByteArrayOutputStream();
+                e.printStackTrace(new PrintStream(bs));
+                logStatus.debug(bs.toString());
 
                 counters.increment("RETRIED_AFTER_EXCEPTION");
             }
