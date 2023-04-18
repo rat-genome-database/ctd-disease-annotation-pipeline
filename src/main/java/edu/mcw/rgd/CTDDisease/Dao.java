@@ -91,15 +91,10 @@ public class Dao {
             orthologs = geneDAO.getActiveOrthologs(geneRgdId);
 
             // leave only orthologs for rat, mouse and human
-            Iterator<Gene> it = orthologs.iterator();
-            while (it.hasNext()) {
-                Gene gene = it.next();
-                if (gene.getSpeciesTypeKey() != SpeciesType.RAT &&
-                        gene.getSpeciesTypeKey() != SpeciesType.MOUSE &&
-                        gene.getSpeciesTypeKey() != SpeciesType.HUMAN) {
-                    it.remove();
-                }
-            }
+            orthologs.removeIf( gene ->
+                    gene.getSpeciesTypeKey() != SpeciesType.RAT &&
+                    gene.getSpeciesTypeKey() != SpeciesType.MOUSE &&
+                    gene.getSpeciesTypeKey() != SpeciesType.HUMAN);
 
             _orthologCache.put(geneRgdId, orthologs);
         }
