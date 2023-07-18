@@ -182,22 +182,25 @@ public class QC {
             annot.setWithInfo("RGD:"+rec.incomingGene.getRgdId());
         }
 
-        // see if this annotation has corresponding OMIM annotation
-        annot.setDataSrc(getOmimSrcPipeline());
-        annot.setRefRgdId(getOmimRefRgdId());
-        annot.setEvidence("IAGP"); // primary evidence for OMIM annot
-        int omimAnnotKey = dao.getAnnotationKey(annot);
-        if( omimAnnotKey!=0 ) {
-            logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("CTD ANNOTS SAME AS PRIMARY OMIM SKIPPED");
-            return false;
-        }
-        annot.setEvidence("ISO"); // secondary evidence for OMIM annot
-        omimAnnotKey = dao.getAnnotationKey(annot);
-        if( omimAnnotKey!=0 ) {
-            logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("CTD ANNOTS SAME AS SECONDARY OMIM SKIPPED");
-            return false;
+        // as of July 18, 2023, we no longer skip CTD annotations that are the same as OMIM annots
+        if( false ) {
+            // see if this annotation has corresponding OMIM annotation
+            annot.setDataSrc(getOmimSrcPipeline());
+            annot.setRefRgdId(getOmimRefRgdId());
+            annot.setEvidence("IAGP"); // primary evidence for OMIM annot
+            int omimAnnotKey = dao.getAnnotationKey(annot);
+            if (omimAnnotKey != 0) {
+                logAnnotsSameAsOmim.debug(annot.dump("|"));
+                counters.increment("CTD ANNOTS SAME AS PRIMARY OMIM SKIPPED");
+                return false;
+            }
+            annot.setEvidence("ISO"); // secondary evidence for OMIM annot
+            omimAnnotKey = dao.getAnnotationKey(annot);
+            if (omimAnnotKey != 0) {
+                logAnnotsSameAsOmim.debug(annot.dump("|"));
+                counters.increment("CTD ANNOTS SAME AS SECONDARY OMIM SKIPPED");
+                return false;
+            }
         }
 
         annot.setDataSrc(getSrcPipeline());
