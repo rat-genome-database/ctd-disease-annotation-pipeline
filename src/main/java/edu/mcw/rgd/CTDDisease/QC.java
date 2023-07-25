@@ -184,21 +184,7 @@ public class QC {
 
         // as of July 18, 2023, we no longer skip CTD annotations that are the same as OMIM annots
         if( false ) {
-            // see if this annotation has corresponding OMIM annotation
-            annot.setDataSrc(getOmimSrcPipeline());
-            annot.setRefRgdId(getOmimRefRgdId());
-            annot.setEvidence("IAGP"); // primary evidence for OMIM annot
-            int omimAnnotKey = dao.getAnnotationKey(annot);
-            if (omimAnnotKey != 0) {
-                logAnnotsSameAsOmim.debug(annot.dump("|"));
-                counters.increment("CTD ANNOTS SAME AS PRIMARY OMIM SKIPPED");
-                return false;
-            }
-            annot.setEvidence("ISO"); // secondary evidence for OMIM annot
-            omimAnnotKey = dao.getAnnotationKey(annot);
-            if (omimAnnotKey != 0) {
-                logAnnotsSameAsOmim.debug(annot.dump("|"));
-                counters.increment("CTD ANNOTS SAME AS SECONDARY OMIM SKIPPED");
+            if( annotationIsSameAsOmim(annot) ) {
                 return false;
             }
         }
@@ -215,6 +201,28 @@ public class QC {
         rec.incomingAnnots.add(annot);
         counters.increment("CTD ANNOT   "+evidence+" COUNT");
         return true;
+    }
+
+    boolean annotationIsSameAsOmim( Annotation annot ) throws Exception {
+        // see if this annotation has corresponding OMIM annotation
+        annot.setDataSrc(getOmimSrcPipeline());
+        annot.setRefRgdId(getOmimRefRgdId());
+        annot.setEvidence("IAGP"); // primary evidence for OMIM annot
+        int omimAnnotKey = dao.getAnnotationKey(annot);
+        if (omimAnnotKey != 0) {
+            logAnnotsSameAsOmim.debug(annot.dump("|"));
+            counters.increment("CTD ANNOTS SAME AS PRIMARY OMIM SKIPPED");
+            return true;
+        }
+        annot.setEvidence("ISO"); // secondary evidence for OMIM annot
+        omimAnnotKey = dao.getAnnotationKey(annot);
+        if (omimAnnotKey != 0) {
+            logAnnotsSameAsOmim.debug(annot.dump("|"));
+            counters.increment("CTD ANNOTS SAME AS SECONDARY OMIM SKIPPED");
+            return true;
+        }
+
+        return false;
     }
 
     void loadData(Record rec) throws Exception {
