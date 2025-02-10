@@ -98,7 +98,7 @@ public class QC {
                 counters.increment("MATCH TERM SINGLE");
             } else {
                 counters.increment("MATCH TERM MULTIPLE");
-                System.out.println("MULTI TERMS: "+rec.diseaseID+" "+ Utils.concatenate("|", diseaseTerms, "getAccId"));
+                logStatus.debug("MULTI TERMS: "+rec.diseaseID+" "+ Utils.concatenate("|", diseaseTerms, "getAccId"));
             }
             rec.incomingTerm = diseaseTerms.get(0);
         }

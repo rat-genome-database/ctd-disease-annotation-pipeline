@@ -1,3 +1,6 @@
+Feb 10, 2025
+  qc: added logging of multiple term match to 'details' logger
+
 Dec 18, 2024
   updated to java 17
 
