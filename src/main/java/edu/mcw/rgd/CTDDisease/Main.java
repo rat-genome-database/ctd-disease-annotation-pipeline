@@ -1,6 +1,7 @@
 package edu.mcw.rgd.CTDDisease;
 
 import edu.mcw.rgd.process.CounterPool;
+import edu.mcw.rgd.process.MemoryMonitor;
 import edu.mcw.rgd.process.Utils;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -73,6 +74,9 @@ public class Main {
 
         long time1 = System.currentTimeMillis();
 
+        MemoryMonitor memoryMonitor = new MemoryMonitor();
+        memoryMonitor.start();
+
         // display connection info
         log.info("   "+dao.getConnectionInfo());
 
@@ -106,6 +110,9 @@ public class Main {
 
         // dump counter statistics
         log.info(counters.dumpAlphabetically());
+
+        memoryMonitor.stop();
+        log.info(memoryMonitor.getSummary());
 
         log.info("=== OK === elapsed time "+Utils.formatElapsedTime(time1, System.currentTimeMillis()));
     }

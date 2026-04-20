@@ -1,3 +1,6 @@
+Apr 20, 2026
+  added memory usage monitoring; updated dependencies
+
 Feb 10, 2025
   qc: added logging of multiple term match to 'details' logger
 
