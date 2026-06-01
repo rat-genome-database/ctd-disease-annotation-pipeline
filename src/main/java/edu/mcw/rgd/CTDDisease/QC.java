@@ -23,13 +23,10 @@ import java.util.List;
 public class QC {
 
     Logger logGenesUnmatched = LogManager.getLogger("genes_unmatched");
-    Logger logAnnotsSameAsOmim = LogManager.getLogger("annots_same_as_omim");
     Logger logStatus = LogManager.getLogger("status");
 
     private String srcPipeline;
     private int refRgdId;
-    private String omimSrcPipeline;
-    private int omimRefRgdId;
 
     private Dao dao;
     private CounterPool counters;
@@ -114,9 +111,7 @@ public class QC {
 
         List<String> xrefSources = getXRefSources(rec.pubMedIDs);
         for( String xrefSource: xrefSources ) {
-            if( !createAnnotation(rec, rec.incomingGene, "EXP", xrefSource) ) {
-                continue; // this CTD annot is the same as OMIM annot -- skip it
-            }
+            createAnnotation(rec, rec.incomingGene, "EXP", xrefSource);
 
             List<Gene> orthologs = dao.getOrthologs(rec.incomingGene.getRgdId());
             for (Gene gene : orthologs) {
@@ -164,7 +159,7 @@ public class QC {
      * @param xrefSource
      * @throws Exception
      */
-    public boolean createAnnotation(Record rec, Gene gene, String evidence, String xrefSource) throws Exception {
+    public void createAnnotation(Record rec, Gene gene, String evidence, String xrefSource) throws Exception {
 
         String notes = "CTD Direct Evidence: "+rec.directEvidence;
 
@@ -182,13 +177,6 @@ public class QC {
             annot.setWithInfo("RGD:"+rec.incomingGene.getRgdId());
         }
 
-        // as of July 18, 2023, we no longer skip CTD annotations that are the same as OMIM annots
-        if( false ) {
-            if( annotationIsSameAsOmim(annot) ) {
-                return false;
-            }
-        }
-
         annot.setDataSrc(getSrcPipeline());
         annot.setRefRgdId(getRefRgdId());
         annot.setEvidence(evidence);
@@ -200,29 +188,6 @@ public class QC {
         // add this annotation to incoming annotations
         rec.incomingAnnots.add(annot);
         counters.increment("CTD ANNOT   "+evidence+" COUNT");
-        return true;
-    }
-
-    boolean annotationIsSameAsOmim( Annotation annot ) throws Exception {
-        // see if this annotation has corresponding OMIM annotation
-        annot.setDataSrc(getOmimSrcPipeline());
-        annot.setRefRgdId(getOmimRefRgdId());
-        annot.setEvidence("IAGP"); // primary evidence for OMIM annot
-        int omimAnnotKey = dao.getAnnotationKey(annot);
-        if (omimAnnotKey != 0) {
-            logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("CTD ANNOTS SAME AS PRIMARY OMIM SKIPPED");
-            return true;
-        }
-        annot.setEvidence("ISO"); // secondary evidence for OMIM annot
-        omimAnnotKey = dao.getAnnotationKey(annot);
-        if (omimAnnotKey != 0) {
-            logAnnotsSameAsOmim.debug(annot.dump("|"));
-            counters.increment("CTD ANNOTS SAME AS SECONDARY OMIM SKIPPED");
-            return true;
-        }
-
-        return false;
     }
 
     void loadData(Record rec) throws Exception {
@@ -254,22 +219,6 @@ public class QC {
 
     public int getRefRgdId() {
         return refRgdId;
-    }
-
-    public void setOmimSrcPipeline(String OmimSrcPipeline) {
-        omimSrcPipeline = OmimSrcPipeline;
-    }
-
-    public String getOmimSrcPipeline() {
-        return omimSrcPipeline;
-    }
-
-    public void setOmimRefRgdId(int OmimRefRgdId) {
-        omimRefRgdId = OmimRefRgdId;
-    }
-
-    public int getOmimRefRgdId() {
-        return omimRefRgdId;
     }
 
     public CounterPool getCounters() {

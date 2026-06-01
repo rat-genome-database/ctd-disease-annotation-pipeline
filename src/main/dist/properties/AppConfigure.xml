@@ -1,7 +1,7 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 	<bean id="main" class="edu.mcw.rgd.CTDDisease.Main">
-        <property name="version" value="ctd-disease-annotation-pipeline  -- build Apr 20, 2026" />
+        <property name="version" value="ctd-disease-annotation-pipeline  -- build Jun 1, 2026" />
 		<property name="dao" ref="dao" />
 		<property name="staleAnnotDeleteThreshold" value="5%" />
 	</bean>
@@ -13,8 +13,6 @@
 	<bean id="qc" class="edu.mcw.rgd.CTDDisease.QC">
 		<property name="srcPipeline" value="CTD" />
 		<property name="refRgdId" value="11554173" />
-		<property name="OmimSrcPipeline" value="OMIM" />
-		<property name="OmimRefRgdId" value="7240710" />
 	</bean>
 
 	<bean id="dao" class="edu.mcw.rgd.CTDDisease.Dao">

@@ -1,7 +1,7 @@
 package edu.mcw.rgd.CTDDisease;
 
 import edu.mcw.rgd.process.CounterPool;
-import edu.mcw.rgd.process.FileDownloader;
+import edu.mcw.rgd.process.FileDownloader2;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,7 +47,7 @@ public class FileParser {
     }
 
     public String downloadDiseaseFile() throws Exception {
-        FileDownloader downloader = new FileDownloader();
+        FileDownloader2 downloader = new FileDownloader2();
         downloader.setExternalFile(getCtdDiseaseFile());
         downloader.setLocalFile("data/gene2disease.tsv.gz");
         downloader.setAppendDateStamp(true);
