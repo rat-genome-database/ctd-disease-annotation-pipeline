@@ -63,7 +63,7 @@ public class FileParser {
         // fields:
         // GeneSymbol	GeneID	DiseaseName	DiseaseID	DirectEvidence	InferenceChemicalName	InferenceScore	OmimIDs	PubMedIDs
         counters.increment("DATA LINES  PROCESSED");
-        String[] cols = line.split("[\\t]", -1);
+        String[] cols = line.split("\t", -1);
         String directEvidence = cols[4];
         if( Utils.isStringEmpty(directEvidence) ) {
             counters.increment("DATA LINES INFERRED (SKIPPED)");

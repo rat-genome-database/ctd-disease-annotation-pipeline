@@ -1,5 +1,6 @@
 Jun 1, 2026
   switched to FileDownloader2 and dropped commons-net/httpclient deps; removed dead OMIM-sameness code; updated dependencies
+  faster line parsing (single-char tab split avoids per-line regex compile)
 
 Apr 20, 2026
   added memory usage monitoring; updated dependencies
