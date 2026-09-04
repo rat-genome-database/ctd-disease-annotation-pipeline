@@ -83,38 +83,43 @@ public class Main {
         SimpleDateFormat sdt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         log.info("   started at "+sdt.format(new Date(time1)));
 
-        CounterPool counters = new CounterPool();
-        Date time0 = new Date();
-        int originalAnnotCount = dao.getAnnotationsModifiedBeforeTimestamp(time0).size();
-        counters.add("ANNOT COUNT ORIGINAL", originalAnnotCount);
+        boolean ok = false;
+        try {
+            CounterPool counters = new CounterPool();
+            Date time0 = new Date();
+            int originalAnnotCount = dao.getCountOfAnnotations();
+            counters.add("ANNOT COUNT ORIGINAL", originalAnnotCount);
 
 
-        qc.setCounters(counters);
+            qc.setCounters(counters);
 
-        List<Record> incomingRecords = fileParser.process(counters);
+            List<Record> incomingRecords = fileParser.process(counters);
 
-        log.info("INCOMING RECORDS: "+incomingRecords.size());
+            log.info("INCOMING RECORDS: "+incomingRecords.size());
 
-        // randomize incoming records to limit the chance of conflicts when processing in highly parallel environment
-        Collections.shuffle(incomingRecords);
+            // randomize incoming records to limit the chance of conflicts when processing in highly parallel environment
+            Collections.shuffle(incomingRecords);
 
-        incomingRecords.parallelStream().forEach( rec-> {
-            try {
-                qc.process(rec);
-            } catch(Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+            incomingRecords.parallelStream().forEach( rec-> {
+                try {
+                    qc.process(rec);
+                } catch(Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-        dao.deleteObsoleteAnnotations(counters, time0, originalAnnotCount, getStaleAnnotDeleteThreshold());
+            dao.deleteObsoleteAnnotations(counters, time0, originalAnnotCount, getStaleAnnotDeleteThreshold());
 
-        // dump counter statistics
-        log.info(counters.dumpAlphabetically());
+            // dump counter statistics
+            log.info(counters.dumpAlphabetically());
 
-        memoryMonitor.stop();
-        log.info(memoryMonitor.getSummary());
+            ok = true;
+        } finally {
+            memoryMonitor.stop();
+            log.info(memoryMonitor.getSummary());
 
-        log.info("=== OK === elapsed time "+Utils.formatElapsedTime(time1, System.currentTimeMillis()));
+            log.info((ok ? "=== OK === " : "=== FAILED === ")+"elapsed time "+Utils.formatElapsedTime(time1, System.currentTimeMillis()));
+        }
     }
 
     public void setVersion(String version) {

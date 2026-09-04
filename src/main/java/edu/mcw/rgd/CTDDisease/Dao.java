@@ -138,6 +138,15 @@ public class Dao {
     }
 
     /**
+     * get count of annotations created by CTD disease pipeline (they are all aspect 'D')
+     * @return annotation count
+     * @throws Exception on spring framework dao failure
+     */
+    public int getCountOfAnnotations() throws Exception {
+        return annotationDAO.getCountOfAnnotationsForCreatedBy(createdBy);
+    }
+
+    /**
      * get all RDO annotations modified by CTD disease pipeline before given date and time
      *
      * @return list of annotations
